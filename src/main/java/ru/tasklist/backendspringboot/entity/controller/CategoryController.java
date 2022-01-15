@@ -1,8 +1,11 @@
 package ru.tasklist.backendspringboot.entity.controller;
 
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.tasklist.backendspringboot.entity.Category;
+import ru.tasklist.backendspringboot.entity.Priority;
 import ru.tasklist.backendspringboot.repo.CategoryRepository;
 
 import java.util.List;
@@ -24,10 +27,37 @@ public class CategoryController {
 
         return list;
     }
+    @PostMapping("/add")
+    public ResponseEntity<Category> add(@RequestBody Category category) {
 
-    @PostMapping ("/add")
-    public Category add(@RequestBody Category category){
-    return categoryRepository.save(category);
+        // проверка на обязательные параметры
+        if (category.getId() != null && category.getId() != 0) {
+            // id создается автоматически в БД (autoincrement), поэтому его передавать не нужно, иначе может быть конфликт уникальности значения
+            return new ResponseEntity("redundant param: id MUST be null", HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        // если передали пустое значение title
+        if (category.getTitle() == null || category.getTitle().trim().length() == 0) {
+            return new ResponseEntity("missed param: title", HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        return ResponseEntity.ok(categoryRepository.save(category));
     }
 
+    @PutMapping("/update")
+    public ResponseEntity<Category> update(@RequestBody Category category) {
+
+        // проверка на обязательные параметры
+        if (category.getId() == null && category.getId() == 0) {
+            // id создается автоматически в БД (autoincrement), поэтому его передавать не нужно, иначе может быть конфликт уникальности значения
+            return new ResponseEntity("missed param: id", HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        // если передали пустое значение title
+        if (category.getTitle() == null || category.getTitle().trim().length() == 0) {
+            return new ResponseEntity("missed param: title", HttpStatus.NOT_ACCEPTABLE);
+        }
+
+        return ResponseEntity.ok(categoryRepository.save(category));
+    }
 }
