@@ -1,14 +1,17 @@
 package ru.tasklist.backendspringboot.entity.controller;
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.tasklist.backendspringboot.entity.Category;
 import ru.tasklist.backendspringboot.entity.Priority;
+import ru.tasklist.backendspringboot.entity.Priority;
 import ru.tasklist.backendspringboot.repo.PriorityRepository;
 
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/priority")
@@ -19,13 +22,10 @@ public class PriorityController {
         this.priorityRepository = priorityRepository;
     }
 
-    @GetMapping("/test")
-    public List<Priority> test() {
+    @GetMapping("/all")
+    public List<Priority> findAllBy() {
 
-        List<Priority> list = priorityRepository.findAll();
-        System.out.println("list =" + list);
-
-        return list;
+        return priorityRepository.findAllByOrderByIdDesc();
     }
 
     @PostMapping("/add")
@@ -51,7 +51,7 @@ public class PriorityController {
 
         // проверка на обязательные параметры
         if (priority.getId() == null && priority.getId() == 0) {
-            // id создается автоматически в БД (autoincrement), поэтому его передавать не нужно, иначе может быть конфликт уникальности значения
+
             return new ResponseEntity("missed param: id", HttpStatus.NOT_ACCEPTABLE);
         }
 
@@ -66,6 +66,34 @@ public class PriorityController {
         }
 
         return ResponseEntity.ok(priorityRepository.save(priority));
+    }
+
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Priority> findById(@PathVariable Long id) {
+
+        Priority priority = null;
+        try {
+            priority = priorityRepository.findById(id).get();
+        }catch (NoSuchElementException e) {
+            e.printStackTrace();
+            return new ResponseEntity("id =" +id+ " not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return ResponseEntity.ok(priority) ;
+    }
+
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Priority> delete(@PathVariable Long id) {
+
+
+        try {
+            priorityRepository.deleteById(id);
+        }catch (EmptyResultDataAccessException e) {
+            e.printStackTrace();
+            return new ResponseEntity("id =" +id+ " not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return new ResponseEntity(HttpStatus.OK);
     }
 }
 

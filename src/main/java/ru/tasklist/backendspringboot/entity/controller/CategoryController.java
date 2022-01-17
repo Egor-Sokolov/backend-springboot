@@ -1,6 +1,7 @@
 package ru.tasklist.backendspringboot.entity.controller;
 
 
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,6 +10,7 @@ import ru.tasklist.backendspringboot.entity.Priority;
 import ru.tasklist.backendspringboot.repo.CategoryRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/category")
@@ -19,14 +21,12 @@ public class CategoryController {
         this.categoryRepository = categoryRepository;
     }
 
-    @GetMapping("/test")
-    public List<Category> test() {
+    @GetMapping("/all")
+    public List<Category> findAll() {
 
-        List<Category> list = categoryRepository.findAll();
-        System.out.println("list =" + list);
-
-        return list;
+        return categoryRepository.findAllByOrderByTitleAsc();
     }
+
     @PostMapping("/add")
     public ResponseEntity<Category> add(@RequestBody Category category) {
 
@@ -49,7 +49,6 @@ public class CategoryController {
 
         // проверка на обязательные параметры
         if (category.getId() == null && category.getId() == 0) {
-            // id создается автоматически в БД (autoincrement), поэтому его передавать не нужно, иначе может быть конфликт уникальности значения
             return new ResponseEntity("missed param: id", HttpStatus.NOT_ACCEPTABLE);
         }
 
@@ -60,4 +59,32 @@ public class CategoryController {
 
         return ResponseEntity.ok(categoryRepository.save(category));
     }
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<Category> findById(@PathVariable Long id) {
+
+        Category category = null;
+        try {
+            category = categoryRepository.findById(id).get();
+        } catch (NoSuchElementException e) {
+            e.printStackTrace();
+            return new ResponseEntity("id =" + id + " not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return ResponseEntity.ok(category);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Category> delete(@PathVariable Long id) {
+
+
+        try {
+            categoryRepository.deleteById(id);
+        } catch (EmptyResultDataAccessException e) {
+            e.printStackTrace();
+            return new ResponseEntity("id =" + id + " not found", HttpStatus.NOT_ACCEPTABLE);
+        }
+        return new ResponseEntity(HttpStatus.OK);
+    }
+
+
 }
