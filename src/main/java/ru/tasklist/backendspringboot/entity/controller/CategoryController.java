@@ -6,8 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.tasklist.backendspringboot.entity.Category;
-import ru.tasklist.backendspringboot.entity.Priority;
+import ru.tasklist.backendspringboot.entity.util.MyLogger;
 import ru.tasklist.backendspringboot.repo.CategoryRepository;
+import ru.tasklist.backendspringboot.search.CategorySearchValues;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -29,7 +30,7 @@ public class CategoryController {
 
     @PostMapping("/add")
     public ResponseEntity<Category> add(@RequestBody Category category) {
-
+        MyLogger.showMethodName("CategoryController: add() -----------------------------------------------");
         // проверка на обязательные параметры
         if (category.getId() != null && category.getId() != 0) {
             // id создается автоматически в БД (autoincrement), поэтому его передавать не нужно, иначе может быть конфликт уникальности значения
@@ -46,7 +47,7 @@ public class CategoryController {
 
     @PutMapping("/update")
     public ResponseEntity<Category> update(@RequestBody Category category) {
-
+        MyLogger.showMethodName("CategoryController: update() -----------------------------------------------");
         // проверка на обязательные параметры
         if (category.getId() == null && category.getId() == 0) {
             return new ResponseEntity("missed param: id", HttpStatus.NOT_ACCEPTABLE);
@@ -62,6 +63,7 @@ public class CategoryController {
 
     @GetMapping("/id/{id}")
     public ResponseEntity<Category> findById(@PathVariable Long id) {
+        MyLogger.showMethodName("CategoryController: findById() -----------------------------------------------");
 
         Category category = null;
         try {
@@ -75,6 +77,7 @@ public class CategoryController {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Category> delete(@PathVariable Long id) {
+        MyLogger.showMethodName("CategoryController: delete() -----------------------------------------------");
 
 
         try {
@@ -84,6 +87,15 @@ public class CategoryController {
             return new ResponseEntity("id =" + id + " not found", HttpStatus.NOT_ACCEPTABLE);
         }
         return new ResponseEntity(HttpStatus.OK);
+    }
+
+
+    @PostMapping("/search")
+
+    public ResponseEntity<List<Category>> search(@RequestBody CategorySearchValues categorySearchValues) {
+        MyLogger.showMethodName("CategoryController: search() -----------------------------------------------");
+
+        return ResponseEntity.ok(categoryRepository.findByTitle(categorySearchValues.getText()));
     }
 
 
